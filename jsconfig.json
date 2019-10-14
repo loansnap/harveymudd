@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "baseUrl": "./",
+    "paths": {
+      "components/*": ["components/*"],
+      "pages/*": ["pages/*"],
+      "redux-state/*": ["redux_state/*"],
+      "themes/*": ["themes/*"],
+      "utils/*": ["utils/*"],
+      "wrappers/*": ["wrappers/*"]
+    }
+  },
+  "exclude": [
+    "node_modules"
+  ]
+}
