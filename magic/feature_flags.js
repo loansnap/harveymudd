@@ -1,7 +1,7 @@
 import React, { useMemo, useContext } from 'react'
 import _ from 'lodash'
 import md5 from 'blueimp-md5'
-import { UserIdentifierContext } from 'utils/identifier'
+import { UserIdentifierContext, useTestGroupIdentifier } from 'utils/identifier'
 
 const FEATURE_FLAGS = {
   'WELCOME_TITLE': {
@@ -110,7 +110,7 @@ export class FeatureFlagged extends React.Component {
 }
 
 export function WithFeatureFlagValue({flag, children}) {
-  const identifier = useContext(UserIdentifierContext)
+  const identifier = useTestGroupIdentifier()
   const flagValue = getFlagStrValue(identifier, flag)
   const renderFunc = children
 
@@ -118,7 +118,7 @@ export function WithFeatureFlagValue({flag, children}) {
 }
 
 export function WithFeatureFlagsValues({flags, children}) {
-  const identifier = useContext(UserIdentifierContext)
+  const identifier = useTestGroupIdentifier()
   const flagValues = _.map(flags, flag => getFlagStrValue(identifier, flag))
   const renderFunc = children
 
@@ -126,27 +126,27 @@ export function WithFeatureFlagsValues({flags, children}) {
 }
 
 export function useFeatureFlag(flagName) {
-  const identifier = useContext(UserIdentifierContext)
+  const identifier = useTestGroupIdentifier()
   return isFeatureFlagged(identifier, flagName)
 }
 
 export function useFeatureFlags(flagNames) {
-  const identifier = useContext(UserIdentifierContext)
+  const identifier = useTestGroupIdentifier()
   return _.map(flagNames, (flag) => isFeatureFlagged(identifier, flag))
 }
 
 export function useFeatureFlagValue(flagName) {
-  const identifier = useContext(UserIdentifierContext)
+  const identifier = useTestGroupIdentifier()
   return getFlagStrValue(identifier, flagName)
 }
 
 export function useFeatureFlagsValues(flagNames) {
-  const identifier = useContext(UserIdentifierContext)
+  const identifier = useTestGroupIdentifier()
   return _.map(flagNames, (flag) => getFlagStrValue(identifier, flag))
 }
 
 export function WithFeatureFlags({flag, children}) {
-  const identifier = useContext(UserIdentifierContext)
+  const identifier = useTestGroupIdentifier()
   const featureFlags = getFeatureFlags(identifier)
   const renderFunc = children
 
@@ -154,7 +154,7 @@ export function WithFeatureFlags({flag, children}) {
 }
 
 export function useAllFeatureFlags() {
-  const identifier = useContext(UserIdentifierContext)
+  const identifier = useTestGroupIdentifier()
   const memoFeatureFlags = useMemo(() => getFeatureFlags(identifier), [identifier])
   return memoFeatureFlags
 }

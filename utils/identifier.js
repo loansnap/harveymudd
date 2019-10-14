@@ -1,8 +1,10 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import uuid from 'uuid'
 import cookie from 'cookie'
 
-const generateIdentifier = () => Math.floor(Math.random() * 128)
+const generateIdentifier = () => {
+  return uuid.v4()
+}
 
 export function ensureIdentifier(req, res) {
   if (process.browser) {
@@ -27,6 +29,16 @@ export function resetIdentifier() {
   const newIdentifier = generateIdentifier()
   const updatedCookie = cookie.serialize('identifier', newIdentifier)
   document.cookie = updatedCookie
+}
+
+export function useIdentifier() {
+  return useContext(UserIdentifierContext)
+}
+
+export function useTestGroupIdentifier() {
+  const identifier = useContext(UserIdentifierContext)
+  const testGroupIdentifier = parseInt(identifier.slice(-2),  16)
+  return testGroupIdentifier
 }
 
 export const UserIdentifierContext = React.createContext(0)

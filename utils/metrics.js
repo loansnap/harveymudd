@@ -1,6 +1,6 @@
 import React, { useMemo, useCallback, useContext } from 'react'
 import { useAllFeatureFlags } from 'magic/feature_flags'
-import { UserIdentifierContext } from './identifier'
+import { useIdentifier } from './identifier'
 
 export function trackEvent(eventName, eventAttrs, identifier, featureFlags) {
   fetch(`${window.location.origin}/api/metric`, {
@@ -18,7 +18,7 @@ export function trackEvent(eventName, eventAttrs, identifier, featureFlags) {
 }
 
 export function useDefaultTrackAttributes() {
-  const identifier = useContext(UserIdentifierContext)
+  const identifier = useIdentifier()
   const featureFlags = useAllFeatureFlags()
   const memoAttrs = useMemo(() => ({
     identifier,
