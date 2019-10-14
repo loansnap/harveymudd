@@ -11,13 +11,14 @@ import FeatureFlagsWrapper from 'components/FeatureFlagsWrapper'
 function SharePage({
     ...props
 }) {
-  const [url, setUrl] = useState('')
+  const [url, setUrl] = useState('http://harvey.loansnap.io')
   return (
     <AppWrapper>
       <Card centered>
         <h1>Please use this code to access demo app</h1>
         <div>
           <Input
+            style={{fontSize: '2.5em'}}
             placeholder='input sharable URL'
             value={url}
             onChange={(ev) => setUrl(ev.target.value)}
