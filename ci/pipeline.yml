@@ -52,8 +52,8 @@ jobs:
           - -c
           - |
             cd repo
-            ls -l
-            echo "MATT"
+            yarn
+            yarn test
             
   - name: build
     plan:
