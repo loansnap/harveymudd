@@ -1,38 +1,98 @@
 ---
-#resource_types:
-  #- name: kubernetes
-    #type: docker-image
-    #source:
-      #repository: zlabjp/kubernetes-resource
-      #tag: "1.15"
+resource_types:
+  - name: kubernetes
+    type: docker-image
+    source:
+      repository: zlabjp/kubernetes-resource
+      tag: "1.15"
 
 resources:
-  - name: harveymudd
+  - name: repo
     type: git
     icon: github-circle
     check_every: 3m
+    webhook_token: "((github_access.HARVEYMUDD_WEBHOOK_SECRET))"
     source:
       uri: "https://github.com/loansnap/harveymudd.git"
       branch: "master"
 
+  - name: docker-image
+    type: docker-image
+    icon: docker
+    source:
+      repository: us.gcr.io/marketforces-corp/harveymudd-demo
+      username: _json_key
+      password: ((gcloud_access.SERVICE_ACCOUNT))
+
+  - name: kubernetes-cluster
+    type: kubernetes
+    icon: cloud-upload
+    source:
+      server: ((kubernetes_access.KUBE_SERVER))
+      token: ((kubernetes_access.KUBE_TOKEN))
+      certificate_authority: ((kubernetes_access.KUBE_CA))
+
 jobs:
   - name: test
     plan:
-    - get: harveymudd
+    - get: repo
       trigger: true
       version: every
-    - task: some-task
+    - task: unit tests
       config:
         platform: linux
         image_resource:
           type: docker-image
           source:
-            repository: node:10-alpine
+            repository: node
+            tag: 10-alpine
         run:
           path: sh
           args:
           - -c
           - |
-            cd harveymudd
+            cd repo
             ls -l
             echo "MATT"
+            
+  - name: build
+    plan:
+    - get: repo
+      passed: [test]
+      trigger: true
+      version: every
+    - put: docker-image
+      params:
+        build: repo
+        tag_file: repo/.git/ref
+
+  - name: deploy
+    plan:
+    - get: repo
+    - get: docker-image
+      passed: [build]
+      trigger: true
+      version: every
+    - task: prepare YML
+      config:
+        platform: linux
+        image_resource:
+          type: docker-image
+          source:
+            repository: alpine
+        run:
+          path: sh
+          args:
+          - -c
+          - |
+            export IMAGE_TAG=`cat docker-image/tag`
+            sed "s/IMAGE_TAG/$IMAGE_TAG/" repo/ci/kube.yml > ymls/kube.yml
+            cat ymls/*.yml
+        inputs:
+          - name: repo
+          - name: docker-image
+        outputs:
+          - name: ymls
+    - put: kubernetes-cluster
+      params:
+        kubectl: apply -f ymls/kube.yml
