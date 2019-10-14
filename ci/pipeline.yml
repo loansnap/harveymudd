@@ -85,8 +85,8 @@ jobs:
           args:
           - -c
           - |
-            export IMAGE_TAG=`cat docker-image/tag`
-            sed "s/IMAGE_TAG/$IMAGE_TAG/" repo/ci/kube.yml > ymls/kube.yml
+            export IMAGE_DIGEST=`cat docker-image/digest`
+            sed "s/IMAGE_DIGEST/$IMAGE_DIGEST/" repo/ci/kube.yml > ymls/kube.yml
             cat ymls/*.yml
         inputs:
           - name: repo
@@ -96,3 +96,4 @@ jobs:
     - put: kubernetes-cluster
       params:
         kubectl: apply -f ymls/kube.yml
+        wait_until_ready_selector: app=harveymudd
