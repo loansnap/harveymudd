@@ -12,8 +12,8 @@ const AppStyles = `
 
 
     // Colors
-    --sprinter-color-primary:             #228B22;
-    --sprinter-color-primary-hover:       #2D7F2D;
+    --sprinter-color-primary:             #32B049;
+    --sprinter-color-primary-hover:       #228B22;
     --sprinter-color-primary-pressed:     #336933;
     --sprinter-color-primary-disabled:    #89B889;
 

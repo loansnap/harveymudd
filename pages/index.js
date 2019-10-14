@@ -58,14 +58,21 @@ function IndexPage() {
             <Button onClick={onResetIdentifier}>Reset identifier</Button>
           </CollapsibleCard>
           <Card centered shadow={true} animateShadowOnHover='lg'>
-            <h1>LoanSnap</h1>
+            <h1>
+              <img
+                src='/static/logo_loansnap_tight.svg'
+                width='200px'
+                alt='LoanSnap'
+              />
+            </h1>
             <p>Navigating your financial future</p>
             <Input
               name='search_loan_amount'
               width='230px'
               centered
               type='tel'
-              placeholder='Maximum price'
+              label='Property price range'
+              placeholder='Max price'
               value={priceLimitInput}
               onChange={((ev) => setPriceLimitInput(formFormatNumber(ev.target.value)))}
             />
