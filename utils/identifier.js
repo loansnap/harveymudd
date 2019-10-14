@@ -36,9 +36,11 @@ export function useIdentifier() {
 }
 
 export function useTestGroupIdentifier() {
-  const identifier = useContext(UserIdentifierContext)
-  const testGroupIdentifier = parseInt(identifier.slice(-2),  16)
-  return testGroupIdentifier
+  return useContext(UserIdentifierContext)
+}
+
+export function getNarrowTestGroupNumber(identifier) {
+  return parseInt(identifier.slice(-2), 16)
 }
 
 export const UserIdentifierContext = React.createContext(0)

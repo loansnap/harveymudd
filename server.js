@@ -1,7 +1,11 @@
 import _ from 'lodash'
 import next from 'next'
+import cookie from 'cookie'
 import express from 'express'
+import expressWs from 'express-ws'
 import bodyParser from 'body-parser'
+import 'isomorphic-fetch'
+import { DEFAULT_FEATURE_FLAGS, getActiveFeatureFlags } from './magic/feature_flags'
 
 const logResponseOnFinish = (req, res) => {
   res.on('finish', () => {
@@ -17,8 +21,11 @@ const {
 
 const NextApp = next({dev: APP_ENV !== 'production'})
 const serverApp = express();
+expressWs(serverApp)
 
+let featureFlags = _.cloneDeep(DEFAULT_FEATURE_FLAGS)
 let metricEvents = []
+let activeConnections = []
 
 NextApp.prepare().then(() => {
   serverApp.use("/static", express.static(__dirname + "/static", {
@@ -57,6 +64,50 @@ NextApp.prepare().then(() => {
     res.send(JSON.stringify(responsePayload))
     res.status(200)
     res.end()
+  })
+
+  serverApp.get('/api/feature-flags', (req, res) => {
+    console.log(req.method, req.url, req.query)
+    const identifier = cookie.parse(req.headers.cookie || '').identifier
+    const flags = getActiveFeatureFlags(featureFlags, identifier)
+    res.send(JSON.stringify(flags))
+    res.status(200)
+    res.end()
+  })
+
+  serverApp.get('/api/all-feature-flags', (req, res) => {
+    console.log(req.method, req.url, req.query)
+    res.send(JSON.stringify(featureFlags))
+    res.status(200)
+    res.end()
+  })
+
+  serverApp.post('/api/feature-flags', (req, res) => {
+    console.log(req.method, req.url, req.query)
+    _.merge(featureFlags, req.body)
+    activeConnections.forEach(({ ws, identifier }) => {
+      const msg = {
+        type: 'feature_flags_updated',
+        body: getActiveFeatureFlags(featureFlags, identifier)
+      }
+      ws.send(JSON.stringify(msg))
+    })
+    res.status(204)
+    res.end()
+  })
+
+  serverApp.ws('/', (ws, req) => {
+    const identifier = cookie.parse(req.headers.cookie || '').identifier
+    const connection = {
+      ws,
+      identifier,
+    }
+    activeConnections.push(connection)
+    console.log('connection established. total connections:', activeConnections.length)
+    ws.on('close', () => {
+      activeConnections = _.without(activeConnections, connection)
+      console.log('connection closed. total connections:', activeConnections.length)
+    })
   })
 
   serverApp.use((req, res) => {
