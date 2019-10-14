@@ -5,7 +5,7 @@ import { UserIdentifierContext, useTestGroupIdentifier } from 'utils/identifier'
 
 const FEATURE_FLAGS = {
   'WELCOME_TITLE': {
-    enabled: false,
+    enabled: true,
     strValue: 'Time to get smarter!',
     // strValues: [
     //   {value: 'Hello and welcome to the App!!!', weight: 5},
@@ -17,7 +17,7 @@ const FEATURE_FLAGS = {
 
 
   'BRAND_COLOR': {
-    enabled: false,
+    enabled: true,
     percentageRollout: 25,
     strValue: 'dodgerblue',
   },
@@ -25,7 +25,7 @@ const FEATURE_FLAGS = {
 
 
   'SHOW_POINTLESS_BUTTON': {
-    enabled: false,
+    enabled: true,
     percentageRollout: 25,
   },
 
