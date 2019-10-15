@@ -68,7 +68,7 @@ function getFlagStrValue(featureFlags, identifier, flagName) {
   }
   if (flag.strValues) {
     // strValuesMap is a weight ed map to identify strValue. for weights 3,2,3 looks like "00011222"
-    const strValuesMap = _.map(flag.strValues, ({value, weight}, idx) => _.repeat(idx, weight)).join('')
+    const strValuesMap = _.map(flag.strValues, ({value, weight=1}, idx) => _.repeat(idx, weight)).join('')
     const mapIdx = getFlagRandomGroupNumber(identifier, flagName) % strValuesMap.length
     const strValueIdx = strValuesMap[mapIdx]
     return flag.strValues[strValueIdx].value
