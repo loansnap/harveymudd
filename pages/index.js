@@ -17,13 +17,25 @@ import { getResidinces } from 'utils/marketplace';
 import ResidenceCard from 'components/ResidenceCard';
 
 function IndexPage() {
+  const [
+    welcomeTitle,
+    brandColor,
+    mainButtonFontSize,
+    startingSearchMaxPrice,
+    loanSnapLogoSize
+  ] = useFeatureFlagsValues([
+      'WELCOME_TITLE',
+      'BRAND_COLOR',
+      'MAIN_BUTTON_FONT_SIZE',
+      'STARTING_SEARCH_MAX_PRICE',
+      'LOANSNAP_LOGO_SIZE'
+    ])
   const identifier = useIdentifier()
-  const [priceLimitInput, setPriceLimitInput] = useState('650,000')
+  const [priceLimitInput, setPriceLimitInput] = useState(startingSearchMaxPrice || '650,000')
   const [selectedResidence, setSelectedResidence] = useState(null)
   const priceLimit = priceLimitInput ? parseNumber(priceLimitInput) : null
   const [searchResults, setSearchResults] = useState([])
   const showPointlessButton = useFeatureFlag('SHOW_POINTLESS_BUTTON')
-  const [welcomeTitle, brandColor, mainButtonFontSize] = useFeatureFlagsValues(['WELCOME_TITLE', 'BRAND_COLOR', 'MAIN_BUTTON_FONT_SIZE'])
   const trackEvent = useTrackEvent()
   const onResetIdentifier = useCallback(() => {
     trackEvent('Reset Identifier', {identifier})
@@ -60,7 +72,7 @@ function IndexPage() {
             <h1>
               <img
                 src='/static/logo_loansnap_tight.svg'
-                width='200px'
+                width={loanSnapLogoSize || '200px'}
                 alt='LoanSnap'
               />
             </h1>
