@@ -87,7 +87,7 @@ const FeatureFlagsWrapper = (ComposedComponent) => {
     reconnectWebsocket = async (attempt = 0) => {
       const baseDelay = 5000
       const delayIncrease = 3000
-      sleep(baseDelay + delayIncrease * attempt)
+      await sleep(baseDelay + delayIncrease * attempt)
       const ws = this.establishWebsocketConnection()
       if (!ws) {
         if (attempt < 10) {
