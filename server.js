@@ -14,7 +14,7 @@ const logResponseOnFinish = (req, res) => {
 }
 
 const {
-  APP_PORT = 3000,
+  PORT = 3000,
   APP_ENV = 'dev',
 } = process.env
 
@@ -116,7 +116,7 @@ NextApp.prepare().then(() => {
     NextApp.render(req, res, req.url)
   })
 
-  const server = serverApp.listen(APP_PORT, () => {
+  const server = serverApp.listen(PORT, () => {
     const port = server.address().port
     const localAppLink = `http://localhost:${port}`
     console.log(`listening on port ${port}`);

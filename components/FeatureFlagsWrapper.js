@@ -2,6 +2,7 @@ import React from 'react'
 import { ensureIdentifier, getIdentifier, UserIdentifierContext, subscribeOnIdentifierUpdate } from 'utils/identifier'
 import { sleep } from 'utils/helpers'
 import { FeatureFlagsContext } from 'magic/feature_flags'
+import config from 'config'
 
 const FeatureFlagsWrapper = (ComposedComponent) => {
   return class FeatureFlagsWrapper extends React.Component {
@@ -16,7 +17,7 @@ const FeatureFlagsWrapper = (ComposedComponent) => {
 
       try {
         featureFlags = await fetch(
-          'http://localhost:3000/api/feature-flags',
+          `${config.API_URL}/feature-flags`,
           {
             headers: {
               'Cookie': ctx && ctx.req ? ctx.req.headers.cookie : document.cookie
@@ -47,12 +48,7 @@ const FeatureFlagsWrapper = (ComposedComponent) => {
     }
 
     componentDidMount() {
-      this.websocket = new WebSocket('ws://localhost:3000')
-      this.configureWebsocket(this.websocket)
-      this.websocket.addEventListener('close', () => {
-        this.websocket = null
-        this.reconnectWebsocket()
-      })
+      this.establishWebsocketConnection()
     }
 
     configureWebsocket = (ws) => {
@@ -75,7 +71,7 @@ const FeatureFlagsWrapper = (ComposedComponent) => {
 
     establishWebsocketConnection = () => {
       try {
-        this.websocket = new WebSocket('ws://localhost:3000')
+        this.websocket = new WebSocket(config.API_WS_URL)
         this.configureWebsocket(this.websocket)
         this.websocket.addEventListener('close', () => {
           this.websocket = null
@@ -93,11 +89,13 @@ const FeatureFlagsWrapper = (ComposedComponent) => {
       const delayIncrease = 3000
       sleep(baseDelay + delayIncrease * attempt)
       const ws = this.establishWebsocketConnection()
-      if (!ws && attempt < 10) {
-        console.error('Failed reconnecting to websocket on attempt ' + (attempt + 1))
-        this.reconnectWebsocket(attempt + 1)
-      } else {
-        console.error('Failed reconnecting to websocket')
+      if (!ws) {
+        if (attempt < 10) {
+          console.error('Failed reconnecting to websocket on attempt ' + (attempt + 1))
+          this.reconnectWebsocket(attempt + 1)
+        } else {
+          console.error('Failed reconnecting to websocket')
+        }
       }
     }
 

@@ -18,6 +18,9 @@ spec:
       containers:
       - name: harveymudd
         image: us.gcr.io/marketforces-corp/harveymudd-demo@IMAGE_DIGEST
+        env:
+        - name: API_HOSTNAME
+          value: harvey.loansnap.io
         ports:
         - containerPort: 3000
 ---

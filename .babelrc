@@ -10,6 +10,7 @@
           "."
         ],
         "alias": {
+          "config": "./config/index.js",
           "components": "./components",
           "pages": "./pages",
           "redux-state": "./redux_state",
