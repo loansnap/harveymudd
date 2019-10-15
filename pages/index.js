@@ -7,8 +7,8 @@ import Card from 'components/Card';
 import CollapsibleCard from 'components/CollapsibleCard';
 import Input from 'components/Input';
 import { Text } from 'components/Typography';
-import { useFeatureFlagsValues, useFeatureFlags } from 'magic/feature_flags';
-import { resetIdentifier, useIdentifier, useTestGroupIdentifier } from 'utils/identifier';
+import { useFeatureFlagsValues, useFeatureFlag } from 'magic/feature_flags';
+import { resetIdentifier, useIdentifier, getNarrowTestGroupNumber } from 'utils/identifier';
 import { sleep, formFormatNumber, parseNumber } from 'utils/helpers';
 import FeatureFlagsWrapper from 'components/FeatureFlagsWrapper'
 import { useTrackEvent } from 'utils/metrics';
@@ -18,12 +18,11 @@ import ResidenceCard from 'components/ResidenceCard';
 
 function IndexPage() {
   const identifier = useIdentifier()
-  const testGroupIdentifier = useTestGroupIdentifier()
   const [priceLimitInput, setPriceLimitInput] = useState('650,000')
   const [selectedResidence, setSelectedResidence] = useState(null)
   const priceLimit = priceLimitInput ? parseNumber(priceLimitInput) : null
   const [searchResults, setSearchResults] = useState([])
-  const [showPointlessButton] = useFeatureFlags(['SHOW_POINTLESS_BUTTON'])
+  const showPointlessButton = useFeatureFlag('SHOW_POINTLESS_BUTTON')
   const [welcomeTitle, brandColor, mainButtonFontSize] = useFeatureFlagsValues(['WELCOME_TITLE', 'BRAND_COLOR', 'MAIN_BUTTON_FONT_SIZE'])
   const trackEvent = useTrackEvent()
   const onResetIdentifier = useCallback(() => {
@@ -54,7 +53,7 @@ function IndexPage() {
             title={<h1>{welcomeTitle || "It's nice to see you!"}</h1>}
           >
             <p>Your identifier is "{identifier}"</p>
-            <p>Your test group identifier is "{testGroupIdentifier}"</p>
+            <p>Your test group identifier is "{getNarrowTestGroupNumber(identifier)}"</p>
             <Button onClick={onResetIdentifier}>Reset identifier</Button>
           </CollapsibleCard>
           <Card centered shadow={true} animateShadowOnHover='lg'>

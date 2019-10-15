@@ -1,9 +1,9 @@
 import React, { useMemo, useContext } from 'react'
 import _ from 'lodash'
 import md5 from 'blueimp-md5'
-import { UserIdentifierContext, useTestGroupIdentifier } from 'utils/identifier'
+import { UserIdentifierContext, useTestGroupIdentifier, getNarrowTestGroupNumber } from 'utils/identifier'
 
-const FEATURE_FLAGS = {
+export const DEFAULT_FEATURE_FLAGS = {
   'WELCOME_TITLE': {
     enabled: true,
     strValue: 'Time to get smarter!',
@@ -44,25 +44,26 @@ const FEATURE_FLAGS = {
 }
 
 function getFlagRandomGroupNumber(identifier, flagName) {
+  const testGroupNumber = getNarrowTestGroupNumber(identifier)
   const flagHash = md5(flagName).slice(0,4)
-  return parseInt(identifier) + parseInt(flagHash, 16)
+  return testGroupNumber + parseInt(flagHash, 16)
 }
 
-function isFeatureFlagged(identifier, flagName) {
-  const flag = FEATURE_FLAGS[flagName]
+function isFeatureFlagged(featureFlags, identifier, flagName) {
+  const flag = featureFlags[flagName]
   if (!flag || !flag.enabled) {
     return false
   }
   if (flag.percentageRollout) {
     return getFlagRandomGroupNumber(identifier, flagName) % 100 < flag.percentageRollout
   } else {
-    return flag.enabled
+    return true
   }
 }
 
-function getFlagStrValue(identifier, flagName) {
-  const flag = FEATURE_FLAGS[flagName]
-  if (!isFeatureFlagged(identifier, flagName)) {
+function getFlagStrValue(featureFlags, identifier, flagName) {
+  const flag = featureFlags[flagName]
+  if (!isFeatureFlagged(featureFlags, identifier, flagName)) {
     return null
   }
   if (flag.strValues) {
@@ -76,15 +77,15 @@ function getFlagStrValue(identifier, flagName) {
   }
 }
 
-function getFeatureFlags(identifier) {
-  return _(FEATURE_FLAGS)
-    .pickBy('enabled')
-    .mapValues((value, flagName) => {
+export function getActiveFeatureFlags(featureFlags, identifier) {
+  return _(featureFlags)
+    .mapValues((flag, flagName) => {
       return {
-        enabled: isFeatureFlagged(identifier, flagName),
-        strValue: getFlagStrValue(identifier, flagName),
+        enabled: isFeatureFlagged(featureFlags, identifier, flagName),
+        strValue: getFlagStrValue(featureFlags, identifier, flagName),
       }
     })
+    .pickBy('enabled')
     .value()
 }
 
@@ -109,52 +110,35 @@ export class FeatureFlagged extends React.Component {
   }
 }
 
-export function WithFeatureFlagValue({flag, children}) {
-  const identifier = useTestGroupIdentifier()
-  const flagValue = getFlagStrValue(identifier, flag)
-  const renderFunc = children
 
-  return renderFunc(flagValue)
-}
+// React hooks
+export const FeatureFlagsContext = React.createContext([])
 
-export function WithFeatureFlagsValues({flags, children}) {
-  const identifier = useTestGroupIdentifier()
-  const flagValues = _.map(flags, flag => getFlagStrValue(identifier, flag))
-  const renderFunc = children
-
-  return renderFunc(flagValues)
+export function useAllFeatureFlags() {
+  const featureFlags = useContext(FeatureFlagsContext)
+  return featureFlags
 }
 
 export function useFeatureFlag(flagName) {
+  const featureFlags = useAllFeatureFlags()
   const identifier = useTestGroupIdentifier()
-  return isFeatureFlagged(identifier, flagName)
+  return isFeatureFlagged(featureFlags, identifier, flagName)
 }
 
 export function useFeatureFlags(flagNames) {
-  const identifier = useTestGroupIdentifier()
-  return _.map(flagNames, (flag) => isFeatureFlagged(identifier, flag))
+  const featureFlags = useAllFeatureFlags()
+  const memoFlags = useMemo(() => _.map(flagNames, (flagName) => isFeatureFlagged(featureFlags, identifier, flagName)), flagNames)
+  return memoFlags
 }
 
 export function useFeatureFlagValue(flagName) {
   const identifier = useTestGroupIdentifier()
-  return getFlagStrValue(identifier, flagName)
+  const featureFlags = useAllFeatureFlags()
+  return getFlagStrValue(featureFlags, identifier, flagName)
 }
 
 export function useFeatureFlagsValues(flagNames) {
   const identifier = useTestGroupIdentifier()
-  return _.map(flagNames, (flag) => getFlagStrValue(identifier, flag))
-}
-
-export function WithFeatureFlags({flag, children}) {
-  const identifier = useTestGroupIdentifier()
-  const featureFlags = getFeatureFlags(identifier)
-  const renderFunc = children
-
-  return renderFunc(featureFlags)
-}
-
-export function useAllFeatureFlags() {
-  const identifier = useTestGroupIdentifier()
-  const memoFeatureFlags = useMemo(() => getFeatureFlags(identifier), [identifier])
-  return memoFeatureFlags
+  const featureFlags = useAllFeatureFlags()
+  return _.map(flagNames, (flag) => getFlagStrValue(featureFlags, identifier, flag))
 }

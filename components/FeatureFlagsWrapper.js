@@ -1,5 +1,7 @@
 import React from 'react'
 import { ensureIdentifier, getIdentifier, UserIdentifierContext, subscribeOnIdentifierUpdate } from 'utils/identifier'
+import { sleep } from 'utils/helpers'
+import { FeatureFlagsContext } from 'magic/feature_flags'
 
 const FeatureFlagsWrapper = (ComposedComponent) => {
   return class FeatureFlagsWrapper extends React.Component {
@@ -10,21 +12,103 @@ const FeatureFlagsWrapper = (ComposedComponent) => {
       } else if (process.browser) {
         identifier = getIdentifier(document.cookie || '')
       }
+      let featureFlags = []
+
+      try {
+        featureFlags = await fetch(
+          'http://localhost:3000/api/feature-flags',
+          {
+            headers: {
+              'Cookie': ctx && ctx.req ? ctx.req.headers.cookie : document.cookie
+            }
+          }
+        ).then(res => res.json())
+      } catch (err) {
+        console.error(err)
+      }
       let composedProps = {}
       if (ComposedComponent.getInitialProps) {
         composedProps = await ComposedComponent.getInitialProps(ctx)
       }
       return {
         ...composedProps,
-        identifier
+        identifier,
+        featureFlags,
+      }
+    }
+
+    websocket = null
+    state = {
+      featureFlags: [],
+    }
+
+    componentWillMount() {
+      this.state.featureFlags = this.props.featureFlags || []
+    }
+
+    componentDidMount() {
+      this.websocket = new WebSocket('ws://localhost:3000')
+      this.configureWebsocket(this.websocket)
+      this.websocket.addEventListener('close', () => {
+        this.websocket = null
+        this.reconnectWebsocket()
+      })
+    }
+
+    configureWebsocket = (ws) => {
+      ws.addEventListener('message', (msg) => {
+        const message = JSON.parse(msg.data)
+        this.handleWebsocketMessage(message)
+      })
+    }
+
+    handleWebsocketMessage = (message) => {
+      switch (message.type) {
+        case 'feature_flags_updated':
+          console.log('Received new feature flags:', message.body)
+          this.setState({featureFlags: message.body})
+          break
+        default:
+          break
+      }
+    }
+
+    establishWebsocketConnection = () => {
+      try {
+        this.websocket = new WebSocket('ws://localhost:3000')
+        this.configureWebsocket(this.websocket)
+        this.websocket.addEventListener('close', () => {
+          this.websocket = null
+          this.reconnectWebsocket()
+        })
+        return this.websocket
+      } catch (err) {
+        console.error(err)
+        return null
+      }
+    }
+
+    reconnectWebsocket = async (attempt = 0) => {
+      const baseDelay = 5000
+      const delayIncrease = 3000
+      sleep(baseDelay + delayIncrease * attempt)
+      const ws = this.establishWebsocketConnection()
+      if (!ws && attempt < 10) {
+        console.error('Failed reconnecting to websocket on attempt ' + (attempt + 1))
+        this.reconnectWebsocket(attempt + 1)
+      } else {
+        console.error('Failed reconnecting to websocket')
       }
     }
 
     render() {
       const {identifier, ...props} = this.props
+      const {featureFlags} = this.state
       return (
         <UserIdentifierContext.Provider value={identifier}>
-          <ComposedComponent {...props}/>
+          <FeatureFlagsContext.Provider value={featureFlags}>
+            <ComposedComponent {...props}/>
+          </FeatureFlagsContext.Provider>
         </UserIdentifierContext.Provider>
       )
     }
