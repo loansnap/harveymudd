@@ -92,7 +92,8 @@ NextApp.prepare().then(() => {
       }
       ws.send(JSON.stringify(msg))
     })
-    res.status(204)
+    res.send(JSON.stringify(featureFlags))
+    res.status(200)
     res.end()
   })
 
