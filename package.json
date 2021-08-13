@@ -29,7 +29,7 @@
     "graphql-tag": "^2.10.1",
     "isomorphic-fetch": "^2.2.1",
     "lodash": "^4.17.19",
-    "next": "^9.3.2",
+    "next": "^11.1.0",
     "prop-types": "^15.7.2",
     "qrcode.react": "^0.9.3",
     "rc-slider": "^8.7.1",
